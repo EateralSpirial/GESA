@@ -1,6 +1,6 @@
 # GESA 开源方案调研：按层级与模块映射
 
-> Version: 0.1  
+> Version: 0.2  
 > Date: 2026-06-18  
 > Scope: GESA Runtime Plane + Meta Plane  
 > 说明：本文优先列出严格开源项目；少数行业常用但采用 source-available / open-core 授权的项目会用“授权注意”标注。链接优先指向项目官网或 GitHub 仓库。  
@@ -251,6 +251,91 @@ PostgreSQL / Supabase / Directus
 ---
 
 # 结论：GESA 的推荐开源组合
+
+## 轻量级组合
+
+这个组合面向单机、小团队、边缘设备、客户本地部署、原型验证和早期商业化试点。核心原则是：**少服务、少中间件、少运维、文件级可备份、Docker Compose 可启动**。
+
+```text
+SQLite
+PocketBase / FastAPI + SQLModel
+Casbin
+LangGraph
+RQ / APScheduler
+Playwright + MCP SDK
+Directus / Appsmith Lite / NiceGUI
+Vikunja / Kanboard
+Fider / GitHub Issues / Gitea Issues
+DuckDB
+OpenTelemetry Lite / SQLite operation_logs
+Docker Compose
+Aider / Goose / OpenHands 单机模式
+```
+
+### 轻量级组合按层级映射
+
+| 层级 | 推荐组合 | 用途 |
+|---|---|---|
+| L1 Database Layer | SQLite + DuckDB + 本地文件目录 | SQLite 保存业务状态；DuckDB 做本地分析；文件目录保存附件、日志包和导出文件。 |
+| L2 Object & Permission Layer | PocketBase / FastAPI + SQLModel + Casbin | PocketBase 可提供 SQLite、Auth、Realtime、管理 UI；FastAPI + SQLModel 适合自研实体 API；Casbin 做轻量权限。 |
+| L3 Atomic Operation Layer | Playwright + MCP SDK + RQ | Playwright 做浏览器自动化；MCP SDK 暴露 Agent 工具；RQ 负责后台异步任务。 |
+| L4 Workspace Layer | Directus / Appsmith Lite / NiceGUI + Vikunja / Kanboard + APScheduler | Directus 或 Appsmith 做可视化操作台；NiceGUI 适合 Python 轻量 UI；Vikunja/Kanboard 做任务看板；APScheduler 做定时调度。 |
+| L5 Feedback Layer | Fider + GitHub Issues / Gitea Issues | Fider 收集功能反馈；Issue 系统承接 Bug、进化候选和任务分派。 |
+| M1 Project Control Plane | Docker Compose + Makefile + shell scripts | 用 Compose 管理本地服务；Makefile 统一安装、备份、迁移、升级和回滚命令。 |
+| M2 Self-Evolution Engine | Aider / Goose / OpenHands 单机模式 | 由外部 Coding Agent 读取 Issue、文档和日志，生成补丁或 PR。 |
+
+### 轻量级组合特点
+
+| 组件 | 特点 | 适配建议 |
+|---|---|---|
+| SQLite | 零运维、单文件、事务能力强、备份简单。 | 作为单机版 GESA 的默认状态数据库。数据量和并发升高后迁移到 PostgreSQL。 |
+| DuckDB | 本地分析能力强，适合直接分析 Parquet/CSV/SQLite 导出数据。 | 用于反馈聚类、操作日志统计、周报分析和本地报表。 |
+| PocketBase | 单文件后端，内置 SQLite、认证、文件存储、Realtime 和管理 UI。 | 适合极简版本的对象管理层；复杂权限和工作流出现后再拆到 FastAPI。 |
+| FastAPI + SQLModel | Python 原生、类型清晰、易于和 Agent / 工具层结合。 | 适合作为 GESA 自研核心 API 的轻量起点。 |
+| Casbin | 权限模型轻量，支持 RBAC、ABAC 等多种模型。 | 用于实现 `Subject-Object-Action-Scope` 的第一版权限。 |
+| LangGraph | 状态机式 Agent 编排，行为比通用多 Agent 框架更可控。 | 适合构建 Secretary Agent 和自进化候选分析 Agent。 |
+| RQ / APScheduler | RQ 适合简单后台任务；APScheduler 适合本地定时任务。 | 用它们替代早期的 Temporal、Airflow、Kafka。 |
+| Playwright | 浏览器自动化稳定，适合封装 Browser Operation Engine。 | 用于处理网页后台、表单填写、客户系统操作。 |
+| MCP SDK | 给 Agent 暴露标准工具接口。 | 所有原子操作尽量封装为 MCP tool，便于后续替换 Agent 框架。 |
+| Directus / Appsmith Lite / NiceGUI | Directus 偏数据后台；Appsmith 偏内部工具；NiceGUI 偏 Python 快速 UI。 | 早期可以先用 Directus 管数据，再用 NiceGUI 做定制工作空间。 |
+| Vikunja / Kanboard | 轻量任务看板。 | 适合替代 Plane/OpenProject 作为早期任务工作区。 |
+| Fider / Gitea Issues / GitHub Issues | 反馈和进化候选承接。 | Gitea 更适合完全自托管；GitHub Issues 更适合和外部 Coding Agent 协作。 |
+| Docker Compose + Makefile | 简单、透明、可在普通服务器和客户本地机器部署。 | 所有服务都用 Compose 启动；所有运维动作都用 Makefile 暴露。 |
+| Aider / Goose / OpenHands 单机模式 | 外部 Coding Agent 可以直接读取仓库、Issue 和日志。 | 轻量阶段建议从 Aider 开始；需要更完整自主修复时评估 OpenHands。 |
+
+### 轻量级组合边界
+
+```text
+适合：
+- 单机部署
+- 小团队内部使用
+- 客户本地私有化试点
+- 早期 MVP
+- 低并发业务流程
+- 数据量中小的企业工具
+
+不适合：
+- 高并发多人同时写入
+- 大规模事件流
+- 多租户复杂权限
+- 大规模 Agent 并发执行
+- 强审计合规场景
+- 跨区域高可用部署
+```
+
+### 轻量级组合升级路径
+
+```text
+SQLite → PostgreSQL
+PocketBase → FastAPI + PostgreSQL / Directus
+Casbin → OpenFGA + OPA
+RQ / APScheduler → Temporal / NATS
+本地文件目录 → MinIO
+DuckDB 本地分析 → ClickHouse / OpenSearch
+Vikunja / Kanboard → Plane / OpenProject
+Docker Compose → Kubernetes + Argo CD
+Aider 单机 → OpenHands + CI/CD + GitOps
+```
 
 ## MVP 组合
 
