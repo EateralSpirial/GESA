@@ -1,7 +1,7 @@
 # GESA 文档索引
 
-> Version: 0.1  
-> Purpose: 快速定位 GESA 架构、层级设计、开源方案和组合方案文档。
+> Version: 0.2  
+> Purpose: 快速定位 GESA 架构、核心引擎、层级设计、开源方案和组合方案文档。
 
 ---
 
@@ -15,7 +15,16 @@
 
 ---
 
-## 2. 层级文档
+## 2. 核心引擎文档
+
+| 引擎 | 文档 | 定位 |
+|---|---|---|
+| Core Engine Layer | [Core Engine Layer](./engines/core-engine-layer.md) | 横向基础能力抽象，将 Database、Semantic、Agent、Workflow、Issue、Policy、Operation、Deployment 等能力组织为同级核心引擎。 |
+| Semantic Engine | [Semantic Engine](./engines/semantic-engine.md) | 语义记忆与上下文召回引擎。BGE-M3 可作为默认 embedding 模型候选，与 Agent Engine 同级。 |
+
+---
+
+## 3. 层级文档
 
 | 层级 | 文档 | 定位 |
 |---|---|---|
@@ -30,7 +39,7 @@
 
 ---
 
-## 3. 组合方案文档
+## 4. 组合方案文档
 
 | 方案 | 文档 | 适用场景 |
 |---|---|---|
@@ -40,30 +49,32 @@
 
 ---
 
-## 4. 推荐阅读顺序
+## 5. 推荐阅读顺序
 
 ```text
 1. architecture.md
-2. knowledge-base-layer.md
-3. layers/l1-database-layer.md
-4. layers/l1-5-knowledge-base-layer.md
-5. layers/l2-object-permission-layer.md
-6. layers/l3-atomic-operation-layer.md
-7. layers/l4-workspace-layer.md
-8. layers/l5-feedback-layer.md
-9. layers/m1-project-control-plane.md
-10. layers/m2-self-evolution-engine.md
-11. open-source-landscape.md
-12. solutions/lightweight-sqlite-stack.md
-13. solutions/mvp-stack.md
-14. solutions/enterprise-stack.md
+2. engines/core-engine-layer.md
+3. engines/semantic-engine.md
+4. knowledge-base-layer.md
+5. layers/l1-database-layer.md
+6. layers/l1-5-knowledge-base-layer.md
+7. layers/l2-object-permission-layer.md
+8. layers/l3-atomic-operation-layer.md
+9. layers/l4-workspace-layer.md
+10. layers/l5-feedback-layer.md
+11. layers/m1-project-control-plane.md
+12. layers/m2-self-evolution-engine.md
+13. open-source-landscape.md
+14. solutions/lightweight-sqlite-stack.md
+15. solutions/mvp-stack.md
+16. solutions/enterprise-stack.md
 ```
 
 ---
 
-## 5. 当前核心判断
+## 6. 当前核心判断
 
-GESA 的基础不应只有数据库。更准确的基础结构是：
+GESA 的基础不应只有数据库，也不应只按垂直层级理解。更准确的结构是：
 
 ```text
 第一基础：Database Layer
@@ -71,9 +82,26 @@ GESA 的基础不应只有数据库。更准确的基础结构是：
 
 第二基础：Knowledge Base Layer
 - 保存文档、规则、经验、解释、语义索引、知识关系。
+
+横向基础：Core Engine Layer
+- 将 Database Engine、Semantic Engine、Agent Engine、Workflow Engine、Issue Engine、Policy Engine、Operation Engine、Deployment Engine 作为同级核心能力治理。
 ```
 
-首批核心 Schema 应为：
+其中最新修正是：
+
+```text
+Semantic Engine 不应只是 Knowledge Base Layer 的普通子模块。
+Semantic Engine 应作为语义记忆与上下文召回引擎，与 Agent Engine 同级。
+
+Agent Engine    = 行动智能
+Semantic Engine = 记忆智能
+Database Engine = 事实状态
+Workflow Engine = 流程秩序
+Issue Engine    = 演化账本
+Policy Engine   = 安全边界
+```
+
+首批核心 Schema / Engine 组合应为：
 
 ```text
 Entity
@@ -82,17 +110,24 @@ Operation
 Permission
 Workflow
 Feedback
+Semantic
+Agent
+Issue
+Deployment
 ```
 
 ---
 
-## 6. 文档维护原则
+## 7. 文档维护原则
 
 ```text
 每个层级独立成文档。
+每个核心引擎独立成文档。
 每套组合方案独立成文档。
-总览文档只保留架构骨架。
+总览文档保留架构骨架。
+核心引擎文档说明横向基础能力和调用边界。
+层级文档说明业务系统结构和职责边界。
 开源方案文档只负责横向比较。
-具体落地细节进入对应层级或方案文档。
-后续每次新增模块、操作、工作流、Agent、知识结构，都应同步更新相关文档。
+具体落地细节进入对应层级、引擎或方案文档。
+后续每次新增模块、操作、工作流、Agent、知识结构、语义索引能力，都应同步更新相关文档。
 ```
