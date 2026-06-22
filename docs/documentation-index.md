@@ -1,11 +1,39 @@
 # GESA 文档索引
 
-> Version: 0.2  
-> Purpose: 快速定位 GESA 架构、核心引擎、层级设计、开源方案和组合方案文档。
+> Version: 0.3  
+> Purpose: 快速定位 GESA 的开发者架构层、企业架构层、核心引擎、层级设计、开源方案和组合方案文档。
 
 ---
 
-## 1. 总览文档
+## 1. 顶层入口
+
+| 文档 | 说明 |
+|---|---|
+| [README.md](./README.md) | GESA 文档系统总入口，区分开发者架构层与企业架构层。 |
+| [developer/README.md](./developer/README.md) | 面向开发者、维护者、Coding Agent、部署 Agent 的架构入口。 |
+| [enterprise/README.md](./enterprise/README.md) | 面向企业管理者、部门首脑、业务用户和企业侧 Agent 的架构入口。 |
+| [developer/documentation-boundary.md](./developer/documentation-boundary.md) | 定义开发者文档与企业文档的边界。 |
+
+---
+
+## 2. 企业架构层
+
+| 模块 | 文档 | 定位 |
+|---|---|---|
+| GESA 企业空间系统 | [enterprise/space-system/](./enterprise/space-system/) | 企业侧第一入口，管理组织权限图、共享空间、个人工作区、Agent Team 和五大界面。 |
+| 定位与边界 | [01-positioning](./enterprise/space-system/01-positioning.md) | 说明企业空间系统在 GESA 中的位置。 |
+| 对象模型 | [02-object-model](./enterprise/space-system/02-object-model.md) | 定义实体、空间、资源、权限、聊天、日程、任务等基础对象。 |
+| 组织权限图 | [03-organization-permission-graph](./enterprise/space-system/03-organization-permission-graph.md) | 定义层级、方向、格子、部门、投影和 CEO 规则。 |
+| 空间类型与资源 | [04-space-types-and-resources](./enterprise/space-system/04-space-types-and-resources.md) | 定义个人、格子、部门、方向、层级、全局空间及其资源。 |
+| 个人工作区 | [05-personal-workspace](./enterprise/space-system/05-personal-workspace.md) | 定义个人空间、文件系统、聊天器、日程和设置。 |
+| Agent Team 与执行 | [06-agent-team-and-execution](./enterprise/space-system/06-agent-team-and-execution.md) | 定义 AI 总管、AI 秘书、AI 执行者、反馈收集者、创造者和权限继承。 |
+| 五大界面 | [07-ui-surfaces](./enterprise/space-system/07-ui-surfaces.md) | 定义对象聊天、日程功能库、执行器、组织管理、用户主页。 |
+| 权限引擎 | [08-permission-engine](./enterprise/space-system/08-permission-engine.md) | 定义权限判断、授权、委托、风险分级和审计。 |
+| 数据模型 | [09-data-model](./enterprise/space-system/09-data-model.md) | 定义核心数据库表草案。 |
+
+---
+
+## 3. 开发者架构层：总览文档
 
 | 文档 | 说明 |
 |---|---|
@@ -15,7 +43,7 @@
 
 ---
 
-## 2. 核心引擎文档
+## 4. 核心引擎文档
 
 | 引擎 | 文档 | 定位 |
 |---|---|---|
@@ -24,7 +52,7 @@
 
 ---
 
-## 3. 层级文档
+## 5. 层级文档
 
 | 层级 | 文档 | 定位 |
 |---|---|---|
@@ -39,7 +67,7 @@
 
 ---
 
-## 4. 组合方案文档
+## 6. 组合方案文档
 
 | 方案 | 文档 | 适用场景 |
 |---|---|---|
@@ -49,85 +77,77 @@
 
 ---
 
-## 5. 推荐阅读顺序
+## 7. 推荐阅读顺序
+
+### 企业侧
 
 ```text
-1. architecture.md
-2. engines/core-engine-layer.md
-3. engines/semantic-engine.md
-4. knowledge-base-layer.md
-5. layers/l1-database-layer.md
-6. layers/l1-5-knowledge-base-layer.md
-7. layers/l2-object-permission-layer.md
-8. layers/l3-atomic-operation-layer.md
-9. layers/l4-workspace-layer.md
-10. layers/l5-feedback-layer.md
-11. layers/m1-project-control-plane.md
-12. layers/m2-self-evolution-engine.md
-13. open-source-landscape.md
-14. solutions/lightweight-sqlite-stack.md
-15. solutions/mvp-stack.md
-16. solutions/enterprise-stack.md
+1. README.md
+2. enterprise/README.md
+3. enterprise/space-system/README.md
+4. enterprise/space-system/01-positioning.md
+5. enterprise/space-system/03-organization-permission-graph.md
+6. enterprise/space-system/04-space-types-and-resources.md
+7. enterprise/space-system/07-ui-surfaces.md
+```
+
+### 开发侧
+
+```text
+1. README.md
+2. developer/README.md
+3. architecture.md
+4. engines/core-engine-layer.md
+5. engines/semantic-engine.md
+6. layers/l1-database-layer.md
+7. layers/l1-5-knowledge-base-layer.md
+8. layers/l2-object-permission-layer.md
+9. layers/l3-atomic-operation-layer.md
+10. layers/l4-workspace-layer.md
+11. layers/l5-feedback-layer.md
+12. layers/m1-project-control-plane.md
+13. layers/m2-self-evolution-engine.md
 ```
 
 ---
 
-## 6. 当前核心判断
+## 8. 当前核心判断
 
-GESA 的基础不应只有数据库，也不应只按垂直层级理解。更准确的结构是：
-
-```text
-第一基础：Database Layer
-- 保存事实、状态、事件、审计、指标。
-
-第二基础：Knowledge Base Layer
-- 保存文档、规则、经验、解释、语义索引、知识关系。
-
-横向基础：Core Engine Layer
-- 将 Database Engine、Semantic Engine、Agent Engine、Workflow Engine、Issue Engine、Policy Engine、Operation Engine、Deployment Engine 作为同级核心能力治理。
-```
-
-其中最新修正是：
+GESA 现在应明确分为两面：
 
 ```text
-Semantic Engine 不应只是 Knowledge Base Layer 的普通子模块。
-Semantic Engine 应作为语义记忆与上下文召回引擎，与 Agent Engine 同级。
-
-Agent Engine    = 行动智能
-Semantic Engine = 记忆智能
-Database Engine = 事实状态
-Workflow Engine = 流程秩序
-Issue Engine    = 演化账本
-Policy Engine   = 安全边界
+企业架构层：企业对象、组织权限图、空间系统、个人工作区、Agent Team、界面与任务执行。
+开发者架构层：数据库、知识库、权限服务、核心引擎、Issue、部署、自进化、代码实现。
 ```
 
-首批核心 Schema / Engine 组合应为：
+底层仍然共享这些核心对象：
 
 ```text
 Entity
-Knowledge
-Operation
+Space
+Resource
 Permission
+Operation
 Workflow
-Feedback
+Knowledge
 Semantic
 Agent
 Issue
 Deployment
+Audit
 ```
 
 ---
 
-## 7. 文档维护原则
+## 9. 文档维护原则
 
 ```text
-每个层级独立成文档。
-每个核心引擎独立成文档。
-每套组合方案独立成文档。
-总览文档保留架构骨架。
-核心引擎文档说明横向基础能力和调用边界。
-层级文档说明业务系统结构和职责边界。
-开源方案文档只负责横向比较。
-具体落地细节进入对应层级、引擎或方案文档。
-后续每次新增模块、操作、工作流、Agent、知识结构、语义索引能力，都应同步更新相关文档。
+1. 面向开发者的文档与面向企业的文档分开。
+2. 每个层级独立成文档。
+3. 每个核心引擎独立成文档。
+4. 每个企业侧大模块独立成目录。
+5. 单个文档只解释一个层级、一个方向或一个作用。
+6. 总览文档保留架构骨架。
+7. 具体落地细节进入对应层级、引擎、空间、界面或数据模型文档。
+8. 后续每次新增模块、操作、工作流、Agent、知识结构、语义索引能力，都应同步更新相关文档。
 ```
