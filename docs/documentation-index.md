@@ -1,7 +1,7 @@
 # GESA 文档索引
 
-> Version: 0.3  
-> Purpose: 快速定位 GESA 的开发者架构层、企业架构层、核心引擎、层级设计、开源方案和组合方案文档。
+> Version: 0.4  
+> Purpose: 快速定位 GESA 的可部署基座、开发者架构层、企业架构层、核心引擎、层级设计、开源方案和组合方案文档。
 
 ---
 
@@ -16,7 +16,17 @@
 
 ---
 
-## 2. 企业架构层
+## 2. 可部署基座
+
+| 文档 | 定位 |
+|---|---|
+| [GESA 可部署基座系统设计](./developer/foundation/01-deployable-base-system-design.md) | 从概念架构进入实体构建的第一份系统设计；定义信息流内核、统一对象模型、组织与权限、Rust 模块化单体、中央控制平面、企业节点、Windows/Linux 终端、企业剖面、更新、隐私 API 和首条垂直切片。 |
+
+后续基座文档将在 `developer/foundation/` 中按信息流、对象、权限、模块、更新、数据库、协议、安全和运维继续拆分。
+
+---
+
+## 3. 企业架构层
 
 | 模块 | 文档 | 定位 |
 |---|---|---|
@@ -33,17 +43,18 @@
 
 ---
 
-## 3. 开发者架构层：总览文档
+## 4. 开发者架构层：总览文档
 
 | 文档 | 说明 |
 |---|---|
+| [developer/foundation/01-deployable-base-system-design.md](./developer/foundation/01-deployable-base-system-design.md) | GESA 可部署 Rust 基座与首条实现路径。 |
 | [architecture.md](./architecture.md) | GESA 企业自进化服务架构总览。 |
 | [open-source-landscape.md](./open-source-landscape.md) | 按层级和模块映射开源方案。 |
 | [knowledge-base-layer.md](./knowledge-base-layer.md) | 知识库层补充设计，说明为什么知识库是第二基础。 |
 
 ---
 
-## 4. 核心引擎文档
+## 5. 核心引擎文档
 
 | 引擎 | 文档 | 定位 |
 |---|---|---|
@@ -52,7 +63,7 @@
 
 ---
 
-## 5. 层级文档
+## 6. 层级文档
 
 | 层级 | 文档 | 定位 |
 |---|---|---|
@@ -67,7 +78,7 @@
 
 ---
 
-## 6. 组合方案文档
+## 7. 组合方案文档
 
 | 方案 | 文档 | 适用场景 |
 |---|---|---|
@@ -77,7 +88,20 @@
 
 ---
 
-## 7. 推荐阅读顺序
+## 8. 推荐阅读顺序
+
+### 从架构进入实体构建
+
+```text
+1. README.md
+2. developer/README.md
+3. developer/foundation/01-deployable-base-system-design.md
+4. enterprise/space-system/02-object-model.md
+5. enterprise/space-system/03-organization-permission-graph.md
+6. enterprise/space-system/08-permission-engine.md
+7. engines/core-engine-layer.md
+8. layers/m1-project-control-plane.md
+```
 
 ### 企业侧
 
@@ -91,55 +115,69 @@
 7. enterprise/space-system/07-ui-surfaces.md
 ```
 
-### 开发侧
+### 开发侧完整路径
 
 ```text
 1. README.md
 2. developer/README.md
-3. architecture.md
-4. engines/core-engine-layer.md
-5. engines/semantic-engine.md
-6. layers/l1-database-layer.md
-7. layers/l1-5-knowledge-base-layer.md
-8. layers/l2-object-permission-layer.md
-9. layers/l3-atomic-operation-layer.md
-10. layers/l4-workspace-layer.md
-11. layers/l5-feedback-layer.md
-12. layers/m1-project-control-plane.md
-13. layers/m2-self-evolution-engine.md
+3. developer/foundation/01-deployable-base-system-design.md
+4. architecture.md
+5. engines/core-engine-layer.md
+6. engines/semantic-engine.md
+7. layers/l1-database-layer.md
+8. layers/l1-5-knowledge-base-layer.md
+9. layers/l2-object-permission-layer.md
+10. layers/l3-atomic-operation-layer.md
+11. layers/l4-workspace-layer.md
+12. layers/l5-feedback-layer.md
+13. layers/m1-project-control-plane.md
+14. layers/m2-self-evolution-engine.md
 ```
 
 ---
 
-## 8. 当前核心判断
+## 9. 当前核心判断
 
-GESA 现在应明确分为两面：
+GESA 现在明确分为两面，并由可部署基座连接：
 
 ```text
-企业架构层：企业对象、组织权限图、空间系统、个人工作区、Agent Team、界面与任务执行。
-开发者架构层：数据库、知识库、权限服务、核心引擎、Issue、部署、自进化、代码实现。
+企业架构层：
+企业对象、组织权限图、空间系统、个人工作区、Agent Team、界面与任务执行。
+
+开发者架构层：
+信息流内核、数据库、知识库、权限服务、核心引擎、Issue、部署、自进化、代码实现。
+
+可部署基座：
+Rust 内核、企业本地数据平面、中央控制平面、节点与终端、模块与 Profile、签名更新。
 ```
 
-底层仍然共享这些核心对象：
+底层共享这些核心对象：
 
 ```text
+GesaObject
 Entity
+OrganizationTopology
 Space
 Resource
 Permission
 Operation
+Flow
+Event
 Workflow
 Knowledge
 Semantic
 Agent
 Issue
+Module
+Node
+Release
 Deployment
 Audit
 ```
 
 ---
 
-## 9. 文档维护原则
+## 10. 文档维护原则
 
 ```text
 1. 面向开发者的文档与面向企业的文档分开。
@@ -148,6 +186,7 @@ Audit
 4. 每个企业侧大模块独立成目录。
 5. 单个文档只解释一个层级、一个方向或一个作用。
 6. 总览文档保留架构骨架。
-7. 具体落地细节进入对应层级、引擎、空间、界面或数据模型文档。
+7. 具体落地细节进入对应层级、引擎、空间、界面、基座或数据模型文档。
 8. 后续每次新增模块、操作、工作流、Agent、知识结构、语义索引能力，都应同步更新相关文档。
+9. 基座层每项关键技术选择通过 ADR 记录原因、替代方案和退出条件。
 ```

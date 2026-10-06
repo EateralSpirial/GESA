@@ -1,8 +1,8 @@
 # GESA 开发者架构层
 
-> Version: 0.3  
+> Version: 0.4  
 > Audience: 开发者、维护者、Coding Agent、部署 Agent。  
-> Scope: 项目仓库内部的技术架构、核心引擎、层级、组合方案与自进化机制。
+> Scope: 项目仓库内部的技术架构、可部署基座、核心引擎、层级、组合方案与自进化机制。
 
 ---
 
@@ -13,13 +13,14 @@
 它主要回答：
 
 ```text
-1. 数据如何存储？
-2. 权限如何判断？
-3. 知识库如何检索？
-4. Agent 如何获得上下文？
-5. Issue 如何进入自进化队列？
-6. 原子操作如何注册、执行和审计？
-7. 部署、回滚、测试和 PR 如何形成闭环？
+1. GESA 第一份可部署实体由什么组成？
+2. 数据如何存储？
+3. 权限如何判断？
+4. 知识库如何检索？
+5. Agent 如何获得上下文？
+6. Issue 如何进入自进化队列？
+7. 原子操作如何注册、执行和审计？
+8. 部署、更新、回滚、测试和 PR 如何形成闭环？
 ```
 
 ---
@@ -43,10 +44,21 @@
 
 ---
 
-## 3. 现有开发者文档入口
+## 3. 可部署基座入口
+
+| 文档 | 定位 |
+|---|---|
+| [GESA 可部署基座系统设计](./foundation/01-deployable-base-system-design.md) | 定义信息流内核、Rust 模块化单体、中央控制平面、企业运行节点、Windows/Linux 终端、企业剖面、更新和安全边界。 |
+
+该文档是从架构研究进入实体构建的第一入口。后续对象模型、信息流契约、模块 SDK、更新平面和安全模型将继续拆分到 `foundation/` 目录。
+
+---
+
+## 4. 现有开发者文档入口
 
 | 分类 | 文档 |
 |---|---|
+| 可部署基座 | [foundation/01-deployable-base-system-design.md](./foundation/01-deployable-base-system-design.md) |
 | 总览 | [../architecture.md](../architecture.md) |
 | 总文档索引 | [../documentation-index.md](../documentation-index.md) |
 | 核心引擎层 | [../engines/core-engine-layer.md](../engines/core-engine-layer.md) |
@@ -65,12 +77,13 @@
 
 ---
 
-## 4. 开发者文档维护原则
+## 5. 开发者文档维护原则
 
 ```text
 1. 每个层级独立成文档。
 2. 每个核心引擎独立成文档。
 3. 每套部署组合方案独立成文档。
 4. 技术实现细节不写入企业侧文档。
-5. 企业侧对象进入开发实现时，应落到 Entity、Space、Resource、Permission、Operation、Audit 等基础对象上。
+5. 企业侧对象进入开发实现时，应落到 GesaObject、Entity、Space、Resource、Permission、Operation、Event、Audit 等基础对象上。
+6. 基座总览只锁定边界、契约和实施顺序；具体 Schema、协议、威胁模型和运维流程进入 foundation/ 独立文档。
 ```
