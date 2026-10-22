@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "suite": "gesa-cli-e2e",
+  "platform": "linux",
+  "passed": 10,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "external-config-hidden-secrets-and-independent-launcher",
+      "passed": true
+    },
+    {
+      "name": "signed-real-core-update-and-new-invocation-switch",
+      "passed": true
+    },
+    {
+      "name": "revoked-session-reauthenticates-once",
+      "passed": true
+    },
+    {
+      "name": "second-update-idempotency-integrity-and-running-old-process",
+      "passed": true
+    },
+    {
+      "name": "manual-rollback-survives-next-watch-and-keeps-high-watermark",
+      "passed": true
+    },
+    {
+      "name": "rejects-signature-replay-expiry-target-origin-contract-and-sequence-attacks",
+      "passed": true
+    },
+    {
+      "name": "failed-health-keeps-previous-core-and-quarantines-candidate",
+      "passed": true
+    },
+    {
+      "name": "interrupted-activation-journal-recovers-offline",
+      "passed": true
+    },
+    {
+      "name": "corrupt-active-core-falls-back-to-independent-bootstrap",
+      "passed": true
+    },
+    {
+      "name": "wrong-stored-credential-fails-without-secret-output",
+      "passed": true
+    }
+  ]
+}

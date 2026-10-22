@@ -190,3 +190,9 @@ Audit
 8. 后续每次新增模块、操作、工作流、Agent、知识结构、语义索引能力，都应同步更新相关文档。
 9. 基座层每项关键技术选择通过 ADR 记录原因、替代方案和退出条件。
 ```
+
+## CLI 更新协议原型（2026-10-23）
+
+- [运行入口](../README.md)
+- [协议与信任边界](./developer/cli-prototype/protocol.md)
+- [测试与验证记录](./developer/cli-prototype/validation.md)
