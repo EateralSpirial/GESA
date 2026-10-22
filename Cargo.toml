@@ -36,7 +36,7 @@ url = "2"
 zeroize = "1"
 
 [profile.release]
-lto = "thin"
+lto = false
 strip = true
 
 [profile.dev]

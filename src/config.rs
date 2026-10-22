@@ -168,10 +168,10 @@ pub fn home_dir() -> Result<PathBuf> {
     }
     #[cfg(windows)]
     {
-        return Ok(PathBuf::from(
-            std::env::var_os("LOCALAPPDATA").context("LOCALAPPDATA is unavailable")?,
+        Ok(
+            PathBuf::from(std::env::var_os("LOCALAPPDATA").context("LOCALAPPDATA is unavailable")?)
+                .join("GESA"),
         )
-        .join("GESA"));
     }
     #[cfg(not(windows))]
     {
