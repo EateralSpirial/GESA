@@ -483,6 +483,20 @@ pub fn harden_new_executable(path: &Path) -> Result<()> {
     Ok(())
 }
 
+/// Validate an installed executable without rewriting ownership or permissions.
+pub fn validate_private_executable(path: &Path) -> Result<()> {
+    let metadata = fs::symlink_metadata(path)?;
+    ensure!(
+        metadata.is_file() && !metadata.file_type().is_symlink(),
+        "Installed executable must be a regular file"
+    );
+    // Directory-mode checks preserve executable bits while enforcing owner-only access.
+    check_private(&metadata, true)?;
+    #[cfg(windows)]
+    windows_check_acl(path, &metadata)?;
+    Ok(())
+}
+
 fn check_private(metadata: &fs::Metadata, directory: bool) -> Result<()> {
     #[cfg(unix)]
     {
@@ -662,14 +676,18 @@ $ErrorActionPreference='Stop'
 try {
   $reader=[System.IO.StreamReader]::new([Console]::OpenStandardInput(),[System.Text.UTF8Encoding]::new($false,$true),$false)
   $path=$reader.ReadLine()
-  $acl=Get-Acl -LiteralPath $path
+  if([System.IO.Directory]::Exists($path)) {
+    $acl=[System.IO.Directory]::GetAccessControl($path)
+  } else {
+    $acl=[System.IO.File]::GetAccessControl($path)
+  }
   $sidType=[System.Security.Principal.SecurityIdentifier]
   $current=[System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
   if($acl.GetOwner($sidType).Value -ne $current) { exit 3 }
   $raw=[System.Security.AccessControl.RawSecurityDescriptor]::new($acl.GetSecurityDescriptorBinaryForm(),0)
   if($null -eq $raw.DiscretionaryAcl) { exit 3 }
   $allowed=@($current,'S-1-5-18','S-1-5-32-544','S-1-3-0')
-  foreach($rule in $acl.Access) {
+  foreach($rule in $acl.GetAccessRules($true,$true,$sidType)) {
     if($rule.AccessControlType -eq 'Allow' -and (([long]$rule.FileSystemRights -band 0x500D0156) -ne 0)) {
       if($allowed -notcontains $rule.IdentityReference.Translate($sidType).Value) { exit 3 }
     }
@@ -729,7 +747,11 @@ try {
     $acl.AddAccessRule($rule)
   }
   $stage=16
-  Set-Acl -LiteralPath $path -AclObject $acl
+  if($isDirectory) {
+    [System.IO.Directory]::SetAccessControl($path,$acl)
+  } else {
+    [System.IO.File]::SetAccessControl($path,$acl)
+  }
   exit 0
 } catch {
   [Console]::Out.WriteLine('ACL_STAGE='+$stage+';TYPE='+$_.Exception.GetType().FullName)
@@ -929,10 +951,15 @@ mod tests {
         symlink(&other, &path).unwrap();
         assert!(load_credentials(&home, &c).is_err());
         assert!(harden_new_executable(&path).is_err());
+        assert!(validate_private_executable(&path).is_err());
         assert_eq!(
             fs::metadata(&other).unwrap().permissions().mode() & 0o777,
             0o600
         );
+        fs::set_permissions(&other, fs::Permissions::from_mode(0o700)).unwrap();
+        assert!(validate_private_executable(&other).is_ok());
+        fs::set_permissions(&other, fs::Permissions::from_mode(0o770)).unwrap();
+        assert!(validate_private_executable(&other).is_err());
         fs::remove_dir_all(home).unwrap();
     }
 
@@ -979,6 +1006,36 @@ mod tests {
         let executable = home.join("core.exe");
         fs::write(&executable, b"MZ-test-fixture").unwrap();
         harden_new_executable(&executable).unwrap();
+        validate_private_executable(&executable).unwrap();
+        // A private parent alone cannot protect a leaf granting another identity write access.
+        let script = r#"
+$ErrorActionPreference='Stop'
+$reader=[System.IO.StreamReader]::new([Console]::OpenStandardInput(),[System.Text.UTF8Encoding]::new($false,$true),$false)
+$path=$reader.ReadLine()
+$acl=[System.IO.File]::GetAccessControl($path)
+$everyone=[System.Security.Principal.SecurityIdentifier]::new('S-1-1-0')
+$rule=[System.Security.AccessControl.FileSystemAccessRule]::new($everyone,'Write','Allow')
+$acl.AddAccessRule($rule)
+[System.IO.File]::SetAccessControl($path,$acl)
+"#;
+        let mut command = Command::new(
+            PathBuf::from(std::env::var_os("SystemRoot").unwrap())
+                .join("System32/WindowsPowerShell/v1.0/powershell.exe"),
+        );
+        command.args([
+            "-NoLogo",
+            "-NoProfile",
+            "-NonInteractive",
+            "-Command",
+            script,
+        ]);
+        let output =
+            bounded_process(command, format!("{}\n", executable.display()).as_bytes()).unwrap();
+        assert!(
+            output.status.success(),
+            "Could not prepare permissive leaf ACL fixture"
+        );
+        assert!(validate_private_executable(&executable).is_err());
         let encrypted = fs::read(secret_path(&home, &c, "credentials").unwrap()).unwrap();
         assert!(!encrypted
             .windows(credentials.password.len())

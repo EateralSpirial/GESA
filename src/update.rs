@@ -253,16 +253,7 @@ fn digest_file(path: &Path, limit: u64) -> Result<(String, u64)> {
 
 fn verify_slot(home: &Path, slot: &Slot) -> Result<PathBuf> {
     let path = slot_path(home, slot)?;
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::{MetadataExt, PermissionsExt};
-        let metadata = fs::metadata(&path)?;
-        ensure!(
-            metadata.permissions().mode() & 0o077 == 0
-                && metadata.uid() == fs::metadata(home)?.uid(),
-            "installed release requires private owner-only permissions"
-        );
-    }
+    crate::config::validate_private_executable(&path)?;
     let (hash, size) = digest_file(&path, MAX_ARTIFACT)?;
     ensure!(
         hash == slot.sha256 && size == slot.size,
@@ -306,7 +297,7 @@ pub fn install_bootstrap(home: &Path) -> Result<()> {
             .join(format!(".bootstrap-{}.tmp", rand::random::<u64>()));
         fs::copy(&source, &temp)?;
         executable(&temp)?;
-        File::open(&temp)?.sync_all()?;
+        OpenOptions::new().write(true).open(&temp)?.sync_all()?;
         fs::rename(&temp, &dest)?;
         sync_dir(&home.join("bootstrap"))?;
     }
