@@ -1,12 +1,16 @@
 name: GESA CLI prototype
 on:
   push:
+    branches: [main]
     paths: ['Cargo.*', 'src/**', 'tests/**', 'tools/**', '.github/workflows/cli.yml']
   pull_request:
     paths: ['Cargo.*', 'src/**', 'tests/**', 'tools/**', '.github/workflows/cli.yml']
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   rust:
     strategy:

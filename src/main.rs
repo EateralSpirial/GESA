@@ -124,6 +124,7 @@ fn run(cli: Cli) -> Result<()> {
             }
             let installed = (|| -> Result<()> {
                 let mut output = options.open(&temporary)?;
+                config::harden_new_executable(&temporary)?;
                 std::io::copy(&mut input, &mut output)?;
                 output.sync_all()?;
                 drop(output);

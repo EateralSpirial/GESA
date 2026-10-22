@@ -457,6 +457,32 @@ pub fn ensure_private_dir(home: &Path) -> Result<()> {
     Ok(())
 }
 
+/// Harden a regular executable file newly created by the caller inside a private directory.
+/// Existing installed files should be verified, rather than silently changing their permissions.
+pub fn harden_new_executable(path: &Path) -> Result<()> {
+    let metadata = fs::symlink_metadata(path)?;
+    ensure!(
+        metadata.is_file() && !metadata.file_type().is_symlink(),
+        "New executable must be a regular file"
+    );
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(path, fs::Permissions::from_mode(0o700))?;
+    }
+    #[cfg(windows)]
+    {
+        use std::os::windows::fs::MetadataExt;
+        ensure!(
+            metadata.file_attributes() & 0x400 == 0,
+            "New executable must omit Windows reparse points"
+        );
+        windows_harden_path(path, false)?;
+        windows_check_acl(path, &fs::symlink_metadata(path)?)?;
+    }
+    Ok(())
+}
+
 fn check_private(metadata: &fs::Metadata, directory: bool) -> Result<()> {
     #[cfg(unix)]
     {
@@ -885,6 +911,11 @@ mod tests {
         fs::rename(&path, &other).unwrap();
         symlink(&other, &path).unwrap();
         assert!(load_credentials(&home, &c).is_err());
+        assert!(harden_new_executable(&path).is_err());
+        assert_eq!(
+            fs::metadata(&other).unwrap().permissions().mode() & 0o777,
+            0o600
+        );
         fs::remove_dir_all(home).unwrap();
     }
 
@@ -928,6 +959,9 @@ mod tests {
         );
         write_private_file(&home.join("config.json"), &serde_json::to_vec(&c).unwrap()).unwrap();
         assert_eq!(Config::load(&home).unwrap().account, c.account);
+        let executable = home.join("core.exe");
+        fs::write(&executable, b"MZ-test-fixture").unwrap();
+        harden_new_executable(&executable).unwrap();
         let encrypted = fs::read(secret_path(&home, &c, "credentials").unwrap()).unwrap();
         assert!(!encrypted
             .windows(credentials.password.len())

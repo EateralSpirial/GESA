@@ -200,31 +200,13 @@ fn load_state(home: &Path) -> Result<State> {
 }
 
 fn save_state(home: &Path, state: &State) -> Result<()> {
-    let bytes = serde_json::to_vec_pretty(state)?;
+    let mut bytes = serde_json::to_vec_pretty(state)?;
     ensure!(
         (bytes.len() as u64) < MAX_METADATA,
         "update state exceeds size limit"
     );
-    let path = home.join(STATE_FILE);
-    no_symlink(&path)?;
-    let temp = home.join(format!(
-        ".state-{}-{}.tmp",
-        std::process::id(),
-        rand::random::<u64>()
-    ));
-    let result = (|| {
-        let mut file = private_options().write(true).create_new(true).open(&temp)?;
-        file.write_all(&bytes)?;
-        file.write_all(b"\n")?;
-        file.sync_all()?;
-        drop(file);
-        fs::rename(&temp, &path).context("could not atomically replace update state")?;
-        sync_dir(home)
-    })();
-    if result.is_err() {
-        let _ = fs::remove_file(temp);
-    }
-    result
+    bytes.push(b'\n');
+    crate::config::write_private_file(&home.join(STATE_FILE), &bytes)
 }
 
 fn slot_path(home: &Path, slot: &Slot) -> Result<PathBuf> {
@@ -290,14 +272,7 @@ fn verify_slot(home: &Path, slot: &Slot) -> Result<PathBuf> {
 }
 
 fn executable(path: &Path) -> Result<()> {
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        fs::set_permissions(path, fs::Permissions::from_mode(0o700))?;
-    }
-    #[cfg(not(unix))]
-    let _ = path;
-    Ok(())
+    crate::config::harden_new_executable(path)
 }
 
 /// Copy the currently executing trusted core once. A later release never replaces it.
