@@ -660,8 +660,8 @@ fn windows_check_acl(path: &Path, metadata: &fs::Metadata) -> Result<()> {
     let script = r#"
 $ErrorActionPreference='Stop'
 try {
-  [Console]::InputEncoding=[System.Text.UTF8Encoding]::new($false)
-  $path=[Console]::In.ReadLine()
+  $reader=[System.IO.StreamReader]::new([Console]::OpenStandardInput(),[System.Text.UTF8Encoding]::new($false,$true),$false)
+  $path=$reader.ReadLine()
   $acl=Get-Acl -LiteralPath $path
   $sidType=[System.Security.Principal.SecurityIdentifier]
   $current=[System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
@@ -704,11 +704,14 @@ fn windows_harden_path(path: &Path, directory: bool) -> Result<()> {
     );
     let script = r#"
 $ErrorActionPreference='Stop'
+$stage=11
 try {
-  [Console]::InputEncoding=[System.Text.UTF8Encoding]::new($false)
-  $path=[Console]::In.ReadLine()
-  $isDirectory=([Console]::In.ReadLine() -eq 'directory')
+  $reader=[System.IO.StreamReader]::new([Console]::OpenStandardInput(),[System.Text.UTF8Encoding]::new($false,$true),$false)
+  $path=$reader.ReadLine()
+  $isDirectory=($reader.ReadLine() -eq 'directory')
+  $stage=12
   $current=[System.Security.Principal.WindowsIdentity]::GetCurrent().User
+  $stage=13
   if($isDirectory) {
     $acl=[System.Security.AccessControl.DirectorySecurity]::new()
     $inherit=[System.Security.AccessControl.InheritanceFlags]'ContainerInherit,ObjectInherit'
@@ -716,16 +719,22 @@ try {
     $acl=[System.Security.AccessControl.FileSecurity]::new()
     $inherit=[System.Security.AccessControl.InheritanceFlags]::None
   }
+  $stage=14
   $acl.SetOwner($current)
   $acl.SetAccessRuleProtection($true,$false)
+  $stage=15
   foreach($sid in @($current.Value,'S-1-5-18','S-1-5-32-544')) {
     $identity=[System.Security.Principal.SecurityIdentifier]::new($sid)
     $rule=[System.Security.AccessControl.FileSystemAccessRule]::new($identity,'FullControl',$inherit,'None','Allow')
     $acl.AddAccessRule($rule)
   }
+  $stage=16
   Set-Acl -LiteralPath $path -AclObject $acl
   exit 0
-} catch { exit 3 }
+} catch {
+  [Console]::Out.WriteLine('ACL_STAGE='+$stage+';TYPE='+$_.Exception.GetType().FullName)
+  exit $stage
+}
 "#;
     let system_root =
         std::env::var_os("SystemRoot").context("Windows system directory unavailable")?;
@@ -741,9 +750,17 @@ try {
     ]);
     let kind = if directory { "directory" } else { "file" };
     let output = bounded_process(command, format!("{path}\n{kind}\n").as_bytes())?;
+    let diagnostic = String::from_utf8_lossy(&output.stdout);
+    let diagnostic: String = diagnostic
+        .chars()
+        .filter(|c| c.is_ascii_alphanumeric() || matches!(c, '_' | '=' | ';' | '.'))
+        .take(160)
+        .collect();
     ensure!(
         output.status.success(),
-        "Unable to set a private Windows ACL"
+        "Unable to set a private Windows ACL (stage {}, {})",
+        output.status.code().unwrap_or(-1),
+        diagnostic
     );
     Ok(())
 }

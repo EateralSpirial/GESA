@@ -12,24 +12,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  windows-acl-probe:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Diagnose Windows ACL setup on a synthetic path
-        shell: python
-        run: |
-          import os, pathlib, subprocess, tempfile
-          source=pathlib.Path('src/config.rs').read_text(encoding='utf-8')
-          section=source.split('fn windows_harden_path(',1)[1]
-          script=section.split('r#"',1)[1].split('"#;',1)[0]
-          script=script.replace('catch { exit 3 }', 'catch { Write-Output $_; exit 3 }')
-          with tempfile.TemporaryDirectory(prefix='gesa-acl-diagnostic-') as path:
-              exe=os.path.join(os.environ['SystemRoot'],'System32','WindowsPowerShell','v1.0','powershell.exe')
-              result=subprocess.run([exe,'-NoLogo','-NoProfile','-NonInteractive','-Command',script],input=path+'\ndirectory\n',encoding='utf-8',capture_output=True,timeout=30)
-              print(result.stdout)
-              print(result.stderr)
-              raise SystemExit(result.returncode)
   rust:
     strategy:
       fail-fast: false
