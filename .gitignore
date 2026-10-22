@@ -141,3 +141,12 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# GESA Rust build and local operational state
+/target/
+__pycache__/
+*.pyc
+/.gesa/
+/demo-state/
+/test-results/
+*.secret

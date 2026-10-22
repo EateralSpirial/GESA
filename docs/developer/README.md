@@ -87,3 +87,7 @@
 5. 企业侧对象进入开发实现时，应落到 GesaObject、Entity、Space、Resource、Permission、Operation、Event、Audit 等基础对象上。
 6. 基座总览只锁定边界、契约和实施顺序；具体 Schema、协议、威胁模型和运维流程进入 foundation/ 独立文档。
 ```
+
+## CLI 更新协议原型
+
+可运行实现及使用方式见 [仓库 README](../../README.md)。技术细节见 [CLI 原型协议](./cli-prototype/protocol.md) 与 [验证记录](./cli-prototype/validation.md)。
